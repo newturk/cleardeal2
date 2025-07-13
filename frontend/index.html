@@ -1,0 +1,880 @@
+<!--
+  AI Lead Intent Score Dashboard – Frontend
+  Professional, open-source, immersive UI for lead scoring
+  Author: Shubham Kumar | Gmail: shubhamkumar831015@gmail.com | Contact: +91 9508741536 | GitHub: https://github.com/newturk/cleardeal2
+  License: MIT
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Lead Intent Score Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --accent: #fbbf24;
+      --bg-gradient: linear-gradient(120deg, #f0f4ff 0%, #e0e7ff 50%, #f8fafc 100%);
+      --bg-gradient-dark: linear-gradient(120deg, #181e29 0%, #23293a 100%);
+      --glass: rgba(255,255,255,0.7);
+      --glass-dark: rgba(30,41,59,0.7);
+      --border: #e5e7eb;
+      --border-dark: #334155;
+      --text: #1e293b;
+      --text-dark: #f1f5f9;
+      --muted: #64748b;
+      --muted-dark: #94a3b8;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --shadow: 0 8px 32px 0 #0002;
+      --radius: 18px;
+      --table-th: #f1f5f9;
+      --table-th-dark: #1e293b;
+      --score-high: #d1fae5;
+      --score-mid: #fef9c3;
+      --score-low: #fee2e2;
+      --score-high-dark: #134e4a;
+      --score-mid-dark: #78350f;
+      --score-low-dark: #7f1d1d;
+      --score-high-text: #22c55e;
+      --score-mid-text: #b45309;
+      --score-low-text: #ef4444;
+      --score-high-text-dark: #4ade80;
+      --score-mid-text-dark: #fde68a;
+      --score-low-text-dark: #f87171;
+      --chart-bar1: rgba(239,68,68,0.7);
+      --chart-bar2: rgba(251,191,36,0.7);
+      --chart-bar3: rgba(34,197,94,0.7);
+      --chart-bar4: rgba(37,99,235,0.7);
+      --chart-bar5: rgba(168,85,247,0.7);
+      --chart-bar1-dark: rgba(239,68,68,0.8);
+      --chart-bar2-dark: rgba(251,191,36,0.8);
+      --chart-bar3-dark: rgba(34,197,94,0.8);
+      --chart-bar4-dark: rgba(96,165,250,0.8);
+      --chart-bar5-dark: rgba(192,132,252,0.8);
+    }
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text);
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      transition: background 0.5s, color 0.3s;
+      overflow-x: hidden;
+    }
+    body.dark {
+      background: var(--bg-gradient-dark);
+      color: var(--text-dark);
+    }
+    /* Animated background shapes */
+    .bg-anim {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .bg-shape {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.18;
+      filter: blur(32px);
+      animation: floatBg 16s ease-in-out infinite alternate;
+    }
+    .bg-shape1 { background: var(--primary); width: 600px; height: 600px; left: -200px; top: -120px; animation-delay: 0s; }
+    .bg-shape2 { background: var(--accent); width: 400px; height: 400px; right: -120px; top: 40vh; animation-delay: 2s; }
+    .bg-shape3 { background: var(--primary-dark); width: 500px; height: 500px; left: 60vw; top: 70vh; animation-delay: 4s; }
+    @keyframes floatBg {
+      0% { transform: scale(1) translateY(0); }
+      100% { transform: scale(1.1) translateY(-40px); }
+    }
+    .sticky-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.85);
+      box-shadow: 0 2px 16px #0001;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: background 0.5s;
+      padding: 0.5rem 0;
+      width: 100vw;
+    }
+    body.dark .sticky-header {
+      background: rgba(30,41,59,0.92);
+    }
+    .header {
+      width: 100%;
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      justify-content: space-between;
+      padding: 0 2.5vw;
+    }
+    .logo-title {
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .logo {
+      width: 54px; height: 54px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.3rem; color: #fff; font-weight: 700;
+      box-shadow: 0 2px 8px #0002;
+      letter-spacing: -2px;
+      border: 3px solid #fff3;
+      transition: border 0.3s;
+    }
+    .title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      letter-spacing: -1px;
+      text-shadow: 0 2px 8px #0001;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin-top: 0.2rem;
+    }
+    body.dark .title { color: var(--primary); }
+    body.dark .subtitle { color: var(--muted-dark); }
+    .dark-toggle {
+      display: flex; align-items: center; gap: 0.5rem;
+      cursor: pointer;
+      background: var(--glass);
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      padding: 0.3rem 1rem 0.3rem 0.5rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      font-size: 1rem;
+      box-shadow: 0 2px 8px #0001;
+      transition: background 0.3s, color 0.3s, border 0.3s;
+      user-select: none;
+    }
+    .dark-toggle:hover {
+      background: var(--primary-dark);
+      color: #fff;
+      border-color: var(--primary-dark);
+    }
+    .dark-toggle .icon {
+      font-size: 1.3rem;
+      margin-right: 0.2rem;
+      vertical-align: middle;
+      transition: color 0.3s;
+    }
+    .main-content {
+      width: 100vw;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: 2.5rem;
+      margin-top: 7.5rem;
+      margin-bottom: 2rem;
+      z-index: 1;
+      position: relative;
+    }
+    @media (max-width: 900px) {
+      .main-content { margin-top: 6.5rem; gap: 1.5rem; }
+      .header { padding: 0 1rem; }
+    }
+    .glass-card {
+      background: var(--glass);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1.5px solid var(--border);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      transition: background 0.5s, border 0.3s, box-shadow 0.3s;
+      margin: 0 auto 2.5rem auto;
+      width: 96vw;
+      max-width: 1200px;
+      padding: 2.5rem 2.5vw 2rem 2.5vw;
+      animation: fadeInUp 0.7s cubic-bezier(.23,1.01,.32,1) 0.1s both;
+    }
+    body.dark .glass-card {
+      background: var(--glass-dark);
+      border-color: var(--border-dark);
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: none; }
+    }
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding-top: 1.2rem;
+      margin-left: 2vw;
+    }
+    .form-card, .table-card, .chart-card {
+      margin-bottom: 2.5rem;
+      padding: 2rem 1.5rem 1.5rem 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1.5px solid var(--border);
+      background: var(--glass);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      transition: background 0.5s, border 0.3s, box-shadow 0.3s;
+    }
+    body.dark .form-card, body.dark .table-card, body.dark .chart-card {
+      background: var(--glass-dark);
+      border-color: var(--border-dark);
+    }
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1.2rem 1.5rem;
+      align-items: end;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
+    label { font-weight: 600; color: var(--muted); }
+    body.dark label { color: var(--muted-dark); }
+    input, select, textarea {
+      padding: 0.6rem 0.7rem;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: 1rem;
+      background: #fff;
+      transition: border 0.2s, box-shadow 0.2s, background 0.3s;
+      outline: none;
+    }
+    body.dark input, body.dark select, body.dark textarea {
+      background: #181e29;
+      color: #f1f5f9;
+      border-color: #334155;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px #2563eb22;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    .consent-row {
+      grid-column: 1 / -1;
+      display: flex; align-items: center; gap: 0.7rem;
+      margin-top: 0.5rem;
+    }
+    .consent-row label { font-weight: 500; color: var(--text); margin: 0; }
+    body.dark .consent-row label { color: var(--text-dark); }
+    button {
+      grid-column: 1 / -1;
+      background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      border: none;
+      padding: 0.9rem 0;
+      border-radius: 7px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 1.2rem;
+      box-shadow: 0 2px 8px #2563eb22;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+    }
+    button:disabled {
+      background: #cbd5e1;
+      color: #64748b;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    button:hover:not(:disabled) {
+      background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 4px 16px #2563eb33;
+    }
+    .error {
+      color: var(--danger);
+      margin-top: 0.7rem;
+      font-weight: 600;
+      grid-column: 1 / -1;
+    }
+    .table-card {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 0.5rem;
+      background: transparent;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px #0001;
+      transition: background 0.3s;
+    }
+    th, td {
+      padding: 0.85rem 0.7rem;
+      border-bottom: 1.5px solid #e2e8f0;
+      text-align: left;
+      font-size: 1rem;
+      transition: background 0.3s, color 0.3s;
+    }
+    th {
+      background: var(--table-th);
+      color: var(--primary-dark);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      border-bottom: 2.5px solid var(--primary);
+    }
+    body.dark th {
+      background: var(--table-th-dark);
+      color: var(--primary);
+    }
+    tr:last-child td { border-bottom: none; }
+    .avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fbbf24 40%, #2563eb 100%);
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 1.1rem;
+      margin-right: 0.5rem;
+      box-shadow: 0 1px 4px #0001;
+    }
+    .score-badge {
+      display: inline-block;
+      min-width: 44px;
+      padding: 0.3em 0.7em;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 1rem;
+      text-align: center;
+      background: var(--score-mid);
+      color: var(--score-mid-text);
+      margin-right: 0.2em;
+      box-shadow: 0 1px 4px #0001;
+      transition: background 0.2s, color 0.2s;
+    }
+    .score-badge.high { background: var(--score-high); color: var(--score-high-text); }
+    .score-badge.low { background: var(--score-low); color: var(--score-low-text); }
+    .score-badge.mid { background: var(--score-mid); color: var(--score-mid-text); }
+    body.dark .score-badge.high { background: var(--score-high-dark); color: var(--score-high-text-dark); }
+    body.dark .score-badge.low { background: var(--score-low-dark); color: var(--score-low-text-dark); }
+    body.dark .score-badge.mid { background: var(--score-mid-dark); color: var(--score-mid-text-dark); }
+    .score-badge.confetti {
+      animation: pop-bounce 0.7s cubic-bezier(.23,1.01,.32,1);
+      box-shadow: 0 0 0 4px #fbbf2433, 0 2px 8px #0002;
+      z-index: 2;
+      position: relative;
+    }
+    @keyframes pop-bounce {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.25) rotate(-8deg); }
+      60% { transform: scale(0.95) rotate(6deg); }
+      100% { transform: scale(1) rotate(0); }
+    }
+    .chart-card {
+      margin-bottom: 2.5rem;
+      padding: 2rem 1.5rem 1.5rem 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1.5px solid var(--border);
+      background: var(--glass);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      transition: background 0.5s, border 0.3s, box-shadow 0.3s;
+    }
+    body.dark .chart-card { background: var(--glass-dark); border-color: var(--border-dark); }
+    .chart-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding-top: 1.2rem;
+    }
+    @media (max-width: 900px) {
+      .header { padding: 0 1rem; }
+      .main-grid { margin-top: 5.5rem; }
+    }
+    @media (max-width: 700px) {
+      .main-grid { margin-top: 4.5rem; }
+      .form-card, .table-card, .chart-card { padding: 1rem 0.5rem; }
+      th, td { font-size: 0.95rem; }
+    }
+    .input-error { border-color: var(--danger) !important; }
+    .input-feedback { color: var(--danger); font-size: 0.95em; margin-top: 0.2em; min-height: 1.2em; }
+    .spinner { display: inline-block; width: 1.2em; height: 1.2em; border: 2.5px solid #fff; border-radius: 50%; border-top: 2.5px solid var(--primary-dark); animation: spin 0.7s linear infinite; vertical-align: middle; margin-left: 0.5em; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .row-animate { animation: fadeInRow 0.7s cubic-bezier(.23,1.01,.32,1); }
+    @keyframes fadeInRow { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+    .tooltip {
+      position: relative;
+      cursor: help;
+      border-bottom: 1px dotted var(--muted);
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: max-content;
+      background: var(--primary-dark);
+      color: #fff;
+      text-align: left;
+      border-radius: 6px;
+      padding: 0.5em 1em;
+      position: absolute;
+      z-index: 10;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 0.98em;
+      pointer-events: none;
+      box-shadow: 0 2px 8px #0002;
+    }
+    .tooltip:hover .tooltiptext, .tooltip:focus .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+    .toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--success);
+      color: #fff;
+      padding: 1em 2em;
+      border-radius: 999px;
+      font-weight: 600;
+      box-shadow: 0 2px 16px #0002;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s, top 0.4s;
+    }
+    .toast.show {
+      opacity: 1;
+      pointer-events: auto;
+      top: 110px;
+    }
+    .collapse-toggle {
+      cursor: pointer;
+      color: var(--primary-dark);
+      font-weight: 600;
+      font-size: 1.05em;
+      margin-bottom: 0.5em;
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      user-select: none;
+      transition: color 0.2s;
+    }
+    .collapse-toggle:hover { color: var(--primary); }
+    .collapse-content {
+      max-height: 2000px;
+      overflow: hidden;
+      transition: max-height 0.5s cubic-bezier(.23,1.01,.32,1);
+    }
+    .collapse-content.collapsed {
+      max-height: 0;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-anim">
+    <div class="bg-shape bg-shape1"></div>
+    <div class="bg-shape bg-shape2"></div>
+    <div class="bg-shape bg-shape3"></div>
+  </div>
+  <div class="sticky-header">
+    <div class="header">
+      <div class="logo-title">
+        <div class="logo">LS</div>
+        <div>
+          <div class="title">Lead Intent Score</div>
+          <div class="subtitle">Prioritize high-intent prospects with AI-powered scoring</div>
+        </div>
+      </div>
+      <div class="dark-toggle" id="darkToggle" title="Toggle dark mode">
+        <span class="icon" id="darkIcon">🌙</span> <span id="darkLabel">Dark</span>
+      </div>
+    </div>
+  </div>
+  <div class="main-content">
+    <div>
+      <div class="section-title">Lead Input Form</div>
+      <div class="form-card glass-card">
+        <form id="leadForm" autocomplete="off" novalidate>
+          <div class="form-group"><label>Age <span class="tooltip">?
+            <span class="tooltiptext">Enter age (18-100)</span></span>
+            <input type="number" name="age" min="18" max="100" required><span class="input-feedback" id="ageFeedback"></span></label></div>
+          <div class="form-group"><label>Job <span class="tooltip">?
+            <span class="tooltiptext">Select job type</span></span>
+            <select name="job" required>
+              <option value="">Select...</option>
+              <option>admin.</option><option>unknown</option><option>unemployed</option><option>management</option><option>housemaid</option><option>entrepreneur</option><option>student</option><option>blue-collar</option><option>self-employed</option><option>retired</option><option>technician</option><option>services</option>
+            </select><span class="input-feedback" id="jobFeedback"></span></label></div>
+          <div class="form-group"><label>Marital <span class="tooltip">?
+            <span class="tooltiptext">Select marital status</span></span>
+            <select name="marital" required>
+              <option value="">Select...</option>
+              <option>married</option><option>divorced</option><option>single</option>
+            </select><span class="input-feedback" id="maritalFeedback"></span></label></div>
+          <div class="form-group"><label>Education <span class="tooltip">?
+            <span class="tooltiptext">Select education level</span></span>
+            <select name="education" required>
+              <option value="">Select...</option>
+              <option>unknown</option><option>secondary</option><option>primary</option><option>tertiary</option>
+            </select><span class="input-feedback" id="educationFeedback"></span></label></div>
+          <div class="form-group"><label>Default <span class="tooltip">?
+            <span class="tooltiptext">Has credit in default?</span></span>
+            <select name="default" required>
+              <option value="">Select...</option>
+              <option>yes</option><option>no</option>
+            </select><span class="input-feedback" id="defaultFeedback"></span></label></div>
+          <div class="form-group"><label>Balance (€) <span class="tooltip">?
+            <span class="tooltiptext">Average yearly balance in euros</span></span>
+            <input type="number" name="balance" required><span class="input-feedback" id="balanceFeedback"></span></label></div>
+          <div class="form-group"><label>Housing Loan <span class="tooltip">?
+            <span class="tooltiptext">Has housing loan?</span></span>
+            <select name="housing" required>
+              <option value="">Select...</option>
+              <option>yes</option><option>no</option>
+            </select><span class="input-feedback" id="housingFeedback"></span></label></div>
+          <div class="form-group"><label>Personal Loan <span class="tooltip">?
+            <span class="tooltiptext">Has personal loan?</span></span>
+            <select name="loan" required>
+              <option value="">Select...</option>
+              <option>yes</option><option>no</option>
+            </select><span class="input-feedback" id="loanFeedback"></span></label></div>
+          <div class="form-group"><label>Contact <span class="tooltip">?
+            <span class="tooltiptext">Contact communication type</span></span>
+            <select name="contact" required>
+              <option value="">Select...</option>
+              <option>unknown</option><option>telephone</option><option>cellular</option>
+            </select><span class="input-feedback" id="contactFeedback"></span></label></div>
+          <div class="form-group"><label>Duration (s) <span class="tooltip">?
+            <span class="tooltiptext">Last contact duration in seconds</span></span>
+            <input type="number" name="duration" min="0" required><span class="input-feedback" id="durationFeedback"></span></label></div>
+          <div class="form-group"><label>Campaign Contacts <span class="tooltip">?
+            <span class="tooltiptext">Number of contacts in this campaign</span></span>
+            <input type="number" name="campaign" min="1" required><span class="input-feedback" id="campaignFeedback"></span></label></div>
+          <div class="form-group"><label>Pdays <span class="tooltip">?
+            <span class="tooltiptext">Days since last contact (-1 means never)</span></span>
+            <input type="number" name="pdays" required><span class="input-feedback" id="pdaysFeedback"></span></label></div>
+          <div class="form-group"><label>Previous Contacts <span class="tooltip">?
+            <span class="tooltiptext">Number of contacts before this campaign</span></span>
+            <input type="number" name="previous" min="0" required><span class="input-feedback" id="previousFeedback"></span></label></div>
+          <div class="form-group"><label>Poutcome <span class="tooltip">?
+            <span class="tooltiptext">Outcome of previous campaign</span></span>
+            <select name="poutcome" required>
+              <option value="">Select...</option>
+              <option>unknown</option><option>other</option><option>failure</option><option>success</option>
+            </select><span class="input-feedback" id="poutcomeFeedback"></span></label></div>
+          <div class="form-group"><label>Month <span class="tooltip">?
+            <span class="tooltiptext">Last contact month</span></span>
+            <select name="month" required>
+              <option value="">Select...</option>
+              <option value="jan">Jan</option><option value="feb">Feb</option><option value="mar">Mar</option><option value="apr">Apr</option><option value="may">May</option><option value="jun">Jun</option><option value="jul">Jul</option><option value="aug">Aug</option><option value="sep">Sep</option><option value="oct">Oct</option><option value="nov">Nov</option><option value="dec">Dec</option>
+            </select><span class="input-feedback" id="monthFeedback"></span></label></div>
+          <div class="form-group"><label>Day <span class="tooltip">?
+            <span class="tooltiptext">Last contact day of month (1-31)</span></span>
+            <input type="number" name="day" min="1" max="31" required><span class="input-feedback" id="dayFeedback"></span></label></div>
+          <div class="form-group" style="grid-column: 1 / -1"><label>Comments <span class="tooltip">?
+            <span class="tooltiptext">Add any notes, e.g. 'urgent', 'not interested', etc.</span></span>
+            <textarea name="comments" required></textarea><span class="input-feedback" id="commentsFeedback"></span></label></div>
+          <div class="consent-row">
+            <input type="checkbox" id="consent" name="consent" required>
+            <label for="consent">I consent to data processing.</label>
+          </div>
+          <button type="submit" id="submitBtn" disabled>Score Lead <span id="spinner" class="spinner" style="display:none"></span></button>
+          <div class="error" id="errorMsg"></div>
+        </form>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">
+        <span class="collapse-toggle" id="toggleTable">▼ Scored Leads</span>
+      </div>
+      <div class="table-card glass-card collapse-content" id="tableCollapse">
+        <table id="leadsTable" style="display:none">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Job</th>
+              <th>Marital</th>
+              <th>Education</th>
+              <th><span class="tooltip">Initial Score<span class="tooltiptext">Predicted by ML model</span></span></th>
+              <th><span class="tooltip">Reranked Score<span class="tooltiptext">Adjusted by rule-based logic</span></span></th>
+              <th>Comments</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">
+        <span class="collapse-toggle" id="toggleChart">▼ Score Distribution</span>
+      </div>
+      <div class="chart-card glass-card collapse-content" id="chartCollapse">
+        <div class="chart-title">Score Distribution</div>
+        <canvas id="scoreChart" height="80"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast">Lead scored successfully!</div>
+  <script>
+    const form = document.getElementById('leadForm');
+    const consent = document.getElementById('consent');
+    const submitBtn = document.getElementById('submitBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    const leadsTable = document.getElementById('leadsTable');
+    const leadsTbody = leadsTable.querySelector('tbody');
+    // Dark mode toggle
+    const darkToggle = document.getElementById('darkToggle');
+    const darkIcon = document.getElementById('darkIcon');
+    const darkLabel = document.getElementById('darkLabel');
+    function setDarkMode(on) {
+      document.body.classList.toggle('dark', on);
+      if (on) {
+        darkIcon.textContent = '☀️';
+        darkLabel.textContent = 'Light';
+      } else {
+        darkIcon.textContent = '🌙';
+        darkLabel.textContent = 'Dark';
+      }
+      // Update chart colors
+      scoreChart.data.datasets[0].backgroundColor = getChartColors();
+      scoreChart.options.scales.x.grid.color = getComputedStyle(document.body).getPropertyValue('--border');
+      scoreChart.options.scales.y.grid.color = getComputedStyle(document.body).getPropertyValue('--border');
+      scoreChart.update();
+    }
+    function getChartColors() {
+      const s = getComputedStyle(document.body);
+      return [
+        s.getPropertyValue('--chart-bar1').trim(),
+        s.getPropertyValue('--chart-bar2').trim(),
+        s.getPropertyValue('--chart-bar3').trim(),
+        s.getPropertyValue('--chart-bar4').trim(),
+        s.getPropertyValue('--chart-bar5').trim(),
+      ];
+    }
+    // Persist dark mode
+    function saveDarkPref(on) { localStorage.setItem('darkMode', on ? '1' : '0'); }
+    function loadDarkPref() { return localStorage.getItem('darkMode') === '1'; }
+    darkToggle.addEventListener('click', () => {
+      const isDark = !document.body.classList.contains('dark');
+      setDarkMode(isDark);
+      saveDarkPref(isDark);
+    });
+    // Chart.js setup
+    const ctx = document.getElementById('scoreChart').getContext('2d');
+    const bins = [0, 20, 40, 60, 80, 100];
+    let scoreCounts = Array(bins.length - 1).fill(0);
+    const scoreChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['0-20', '21-40', '41-60', '61-80', '81-100'],
+        datasets: [{
+          label: 'Lead Count',
+          data: scoreCounts,
+          backgroundColor: getChartColors(),
+          borderRadius: 8,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: false }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, grid: { color: getComputedStyle(document.body).getPropertyValue('--border') }, ticks: { stepSize: 1 } }
+        }
+      }
+    });
+    function updateChart(score) {
+      let idx = bins.findIndex((b, i) => score > b && score <= bins[i+1]);
+      if (score === 0) idx = 0;
+      if (score === 100) idx = bins.length - 2;
+      if (idx < 0) idx = 0;
+      scoreCounts[idx]++;
+      scoreChart.data.datasets[0].data = scoreCounts;
+      scoreChart.update();
+    }
+    // Enable submit only if consent is checked
+    consent.addEventListener('change', () => {
+      submitBtn.disabled = !consent.checked;
+    });
+    function clearForm() {
+      form.reset();
+      submitBtn.disabled = true;
+    }
+    function getInitials(job, marital) {
+      let j = job && job.length > 0 ? job[0].toUpperCase() : 'L';
+      let m = marital && marital.length > 0 ? marital[0].toUpperCase() : 'S';
+      return j + m;
+    }
+    function scoreBadge(score) {
+      if (score >= 80) return 'score-badge high';
+      if (score >= 40) return 'score-badge mid';
+      return 'score-badge low';
+    }
+    function addLeadToTable(lead) {
+      leadsTable.style.display = '';
+      const row = document.createElement('tr');
+      // Confetti trigger if reranked_score >= 90
+      let confettiClass = '';
+      if (lead.reranked_score >= 90) {
+        confettiClass = 'confetti';
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.3 },
+          colors: [
+            getComputedStyle(document.body).getPropertyValue('--primary').trim(),
+            getComputedStyle(document.body).getPropertyValue('--accent').trim(),
+            getComputedStyle(document.body).getPropertyValue('--success').trim(),
+            getComputedStyle(document.body).getPropertyValue('--danger').trim(),
+            '#fff',
+          ],
+          zIndex: 9999,
+        });
+      }
+      row.classList.add('row-animate');
+      row.innerHTML = `
+        <td><span class="avatar" title="${lead.job} ${lead.marital}">${getInitials(lead.job, lead.marital)}</span></td>
+        <td>${lead.job}</td>
+        <td>${lead.marital}</td>
+        <td>${lead.education}</td>
+        <td><span class="${scoreBadge(lead.initial_score)} tooltip" tabindex="0">${lead.initial_score}<span class="tooltiptext">ML Model Score</span></span></td>
+        <td><span class="${scoreBadge(lead.reranked_score)} ${confettiClass} tooltip" tabindex="0">${lead.reranked_score}<span class="tooltiptext">Reranked Score</span></span></td>
+        <td>${lead.comments}</td>
+      `;
+      leadsTbody.prepend(row);
+      updateChart(lead.reranked_score);
+      setTimeout(() => row.classList.remove('row-animate'), 900);
+      scrollToTable();
+      showToast('Lead scored successfully!');
+    }
+    // Real-time validation
+    const fields = [
+      'age','job','marital','education','default','balance','housing','loan','contact','duration','campaign','pdays','previous','poutcome','comments','month','day'
+    ];
+    fields.forEach(name => {
+      const input = form.elements[name];
+      const feedback = document.getElementById(name+'Feedback');
+      if (!input) return;
+      input.addEventListener('input', () => validateField(input, feedback));
+      input.addEventListener('blur', () => validateField(input, feedback));
+    });
+    function validateField(input, feedback) {
+      let valid = true, msg = '';
+      if (input.type === 'number') {
+        if (input.value === '' || isNaN(input.value)) { valid = false; msg = 'Required'; }
+        else if (input.hasAttribute('min') && Number(input.value) < Number(input.min)) { valid = false; msg = `Min ${input.min}`; }
+        else if (input.hasAttribute('max') && Number(input.value) > Number(input.max)) { valid = false; msg = `Max ${input.max}`; }
+      } else if (input.tagName === 'SELECT' || input.tagName === 'TEXTAREA') {
+        if (!input.value) { valid = false; msg = 'Required'; }
+      }
+      if (!valid) {
+        input.classList.add('input-error');
+        feedback.textContent = msg;
+      } else {
+        input.classList.remove('input-error');
+        feedback.textContent = '';
+      }
+      return valid;
+    }
+    // Loading spinner
+    const spinner = document.getElementById('spinner');
+    // Toast
+    const toast = document.getElementById('toast');
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+    // Collapsible sections
+    function setupCollapse(toggleId, contentId) {
+      const toggle = document.getElementById(toggleId);
+      const content = document.getElementById(contentId);
+      let open = true;
+      toggle.addEventListener('click', () => {
+        open = !open;
+        content.classList.toggle('collapsed', !open);
+        toggle.textContent = (open ? '▼' : '►') + ' ' + toggle.textContent.replace(/^. /, '');
+      });
+    }
+    setupCollapse('toggleTable', 'tableCollapse');
+    setupCollapse('toggleChart', 'chartCollapse');
+    // Animate scroll to table
+    function scrollToTable() {
+      const table = document.getElementById('tableCollapse');
+      table.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    // Form submit with validation, spinner, and error handling
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      let valid = true;
+      fields.forEach(name => {
+        const input = form.elements[name];
+        const feedback = document.getElementById(name+'Feedback');
+        if (input && !validateField(input, feedback)) valid = false;
+      });
+      if (!valid) return;
+      errorMsg.textContent = '';
+      submitBtn.disabled = true;
+      spinner.style.display = '';
+      const data = Object.fromEntries(new FormData(form).entries());
+      data.age = Number(data.age);
+      data.balance = Number(data.balance);
+      data.duration = Number(data.duration);
+      data.campaign = Number(data.campaign);
+      data.pdays = Number(data.pdays);
+      data.previous = Number(data.previous);
+      data.consent = !!data.consent;
+      data.month = data.month || ''; // Ensure month is a string or empty
+      data.day = Number(data.day);
+      try {
+        const res = await fetch('http://127.0.0.1:8000/score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'API error');
+        }
+        const lead = await res.json();
+        addLeadToTable(lead);
+        form.reset();
+        submitBtn.disabled = true;
+      } catch (err) {
+        errorMsg.textContent = err.message;
+      } finally {
+        spinner.style.display = 'none';
+        submitBtn.disabled = false;
+      }
+    });
+    // On load: set dark mode from localStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      setDarkMode(loadDarkPref());
+    });
+  </script>
+</body>
+</html> 
